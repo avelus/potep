@@ -1,5 +1,444 @@
-let autoFollow=false,hikeStarted=false,startCounter=0;let wakeLock=null,userPos=null,userMarker=null;const map=L.map('map');L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'OSM'}).addTo(map);const track=[{lat:46.0001,lon:14.0001},{lat:46.0011,lon:14.0011}];L.polyline(track.map(p=>[p.lat,p.lon]),{color:'#2F5D50'}).addTo(map);function hav(a,b,c,d){const R=6371000,p=Math.PI/180,x=(c-a)*p,y=(d-b)*p,s=Math.sin(x/2)**2+Math.cos(a*p)*Math.cos(c*p)*Math.sin(y/2)**2;return R*2*Math.atan2(Math.sqrt(s),Math.sqrt(1-s));}function distTrack(){let m=1e9;for(const p of track){m=Math.min(m,hav(userPos.lat,userPos.lon,p.lat,p.lon));}return Math.round(m);}navigator.geolocation.watchPosition(pos=>{userPos={lat:pos.coords.latitude,lon:pos.coords.longitude};const acc=Math.round(pos.coords.accuracy);document.getElementById('gpsAccuracy').innerText='Natančnost: '+acc+' m';const d=distTrack();document.getElementById('gpsTrack').innerText='Oddaljenost do poti: '+d+' m';document.getElementById('gpsStatus').innerText=acc<=30?'✅ GPS pripravljen':'📡 Slab signal';if(!userMarker){userMarker=L.circleMarker([userPos.lat,userPos.lon],{radius:8}).addTo(map);map.setView([userPos.lat,userPos.lon],16);}else{userMarker.setLatLng([userPos.lat,userPos.lon]);if(autoFollow) map.panTo([userPos.lat,userPos.lon]);}
-if(acc<=30&&d<=30){startCounter++;document.getElementById('gpsConfirm').innerText='Priprava starta: '+startCounter+'/3';if(startCounter>=3&&!hikeStarted)document.getElementById('startBtn').classList.remove('hidden');}else startCounter=0;},{}, {enableHighAccuracy:true});
-map.on('dragstart',()=>{autoFollow=false;});
-document.getElementById('centerBtn').onclick=()=>{if(userPos){autoFollow=true;map.setView([userPos.lat,userPos.lon],18);}};
-document.getElementById('startBtn').onclick=async()=>{hikeStarted=true;autoFollow=true;try{wakeLock=await navigator.wakeLock.request('screen');}catch(e){}document.getElementById('startBtn').classList.add('hidden');};
+
+const route="pohod1";
+const MAX_ACC=30,START_DIST=30;
+
+let hikeStarted=false;
+let wakeLock=null;
+let startCounter=0;
+
+let gpsAccuracy=999;
+let insideCounter=0;
+let currentQ=null;
+
+let track=[];
+let wps=[];
+let segments=[];
+let questions=[];
+
+let userPos;
+let userMarker;
+let line;
+
+let autoFollow=false;
+
+const map=L.map('map');
+
+L.tileLayer(
+    'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
+).addTo(map);
+
+const log=m=>
+document.getElementById('gpsLog').innerHTML=
+'['+new Date().toLocaleTimeString()+'] '+m+'<br>'+
+document.getElementById('gpsLog').innerHTML;
+
+function hav(a,b,c,d){
+
+    const R=6371000;
+    const p=Math.PI/180;
+
+    const x=(c-a)*p;
+    const y=(d-b)*p;
+
+    const s=
+        Math.sin(x/2)**2+
+        Math.cos(a*p)*
+        Math.cos(c*p)*
+        Math.sin(y/2)**2;
+
+    return R*2*Math.atan2(
+        Math.sqrt(s),
+        Math.sqrt(1-s)
+    );
+}
+
+async function init(){
+
+    questions=
+        await(
+            await fetch(
+                'data/pohod1.json'
+            )
+        ).json();
+
+    const xml=
+        new DOMParser()
+        .parseFromString(
+            await(
+                await fetch(
+                    'routes/pohod1.gpx'
+                )
+            ).text(),
+            'text/xml'
+        );
+
+    xml
+    .querySelectorAll('trkpt')
+    .forEach(p=>
+        track.push({
+            lat:+p.getAttribute('lat'),
+            lon:+p.getAttribute('lon')
+        })
+    );
+
+    xml
+    .querySelectorAll('wpt')
+    .forEach(w=>
+        wps.push({
+            name:w.querySelector('name').textContent,
+            lat:+w.getAttribute('lat'),
+            lon:+w.getAttribute('lon')
+        })
+    );
+
+    drawTrack();
+
+    navigator.geolocation.watchPosition(
+        gpsSuccess,
+        gpsError,
+        {
+            enableHighAccuracy:true
+        }
+    );
+
+    document
+        .getElementById('startBtn')
+        .onclick=startHike;
+
+    document
+        .getElementById('centerBtn')
+        .onclick=centerOnUser;
+
+    map.on(
+        'dragstart',
+        ()=>{
+            autoFollow=false;
+        }
+    );
+}
+
+function drawTrack(){
+
+    line=
+        L.polyline(
+            track.map(
+                p=>[p.lat,p.lon]
+            ),
+            {
+               color:'#2F5D50'
+            }
+        )
+        .addTo(map);
+}
+
+function nearestTrackDistance(){
+
+    let min=1e9;
+
+    for(const p of track){
+
+        const d=
+            hav(
+                userPos.lat,
+                userPos.lon,
+                p.lat,
+                p.lon
+            );
+
+        if(d<min){
+            min=d;
+        }
+    }
+
+    return Math.round(min);
+}
+
+function gpsSuccess(pos){
+
+    gpsAccuracy=
+        Math.round(
+            pos.coords.accuracy
+        );
+
+    userPos={
+        lat:pos.coords.latitude,
+        lon:pos.coords.longitude
+    };
+
+    if(!userMarker){
+
+        userMarker=
+            L.circleMarker(
+                [
+                    userPos.lat,
+                    userPos.lon
+                ],
+                {
+                    radius:8
+                }
+            )
+            .addTo(map);
+
+        map.setView(
+            [
+                userPos.lat,
+                userPos.lon
+            ],
+            16
+        );
+
+    }else{
+
+        userMarker.setLatLng(
+            [
+                userPos.lat,
+                userPos.lon
+            ]
+        );
+
+        if(autoFollow){
+
+            map.panTo(
+                [
+                    userPos.lat,
+                    userPos.lon
+                ]
+            );
+
+        }
+
+    }
+
+    document
+      .getElementById('gpsAccuracy')
+      .innerText=
+      'Natančnost: '
+      +gpsAccuracy+
+      ' m';
+
+    document
+      .getElementById('gpsCoords')
+      .innerText=
+      'Koordinate: '+
+      userPos.lat.toFixed(6)+
+      ', '+
+      userPos.lon.toFixed(6);
+
+    let dist=
+        nearestTrackDistance();
+
+    document
+      .getElementById('gpsTrack')
+      .innerText=
+      'Oddaljenost do poti: '
+      +dist+
+      ' m';
+
+    const s=
+        document.getElementById(
+            'gpsStatus'
+        );
+
+    if(gpsAccuracy<=15){
+
+        s.innerText=
+          '✅ GPS pripravljen';
+
+    }
+    else if(gpsAccuracy<=30){
+
+        s.innerText=
+          '⚠ GPS se izboljšuje';
+
+    }
+    else{
+
+        s.innerText=
+          '📡 Slab signal';
+
+    }
+
+    if(
+        gpsAccuracy<=30 &&
+        dist<=START_DIST
+    ){
+
+        startCounter++;
+
+        document
+          .getElementById(
+             'gpsConfirm'
+          )
+          .innerText=
+          'Priprava starta: '
+          +startCounter+
+          '/3';
+
+        if(
+            startCounter>=3 &&
+            !hikeStarted
+        ){
+
+            document
+              .getElementById(
+                  'startBtn'
+              )
+              .classList
+              .remove('hidden');
+
+        }
+
+    }else{
+
+        startCounter=0;
+
+        if(!hikeStarted){
+
+            document
+              .getElementById(
+                 'startBtn'
+              )
+              .classList
+              .add('hidden');
+
+        }
+
+    }
+
+    if(hikeStarted){
+        checkWaypoint();
+    }
+}
+
+function gpsError(e){
+
+    document
+      .getElementById(
+         'gpsStatus'
+      )
+      .innerText=
+      'GPS napaka';
+
+    log(
+       'ERR '+e.code
+    );
+}
+
+async function startHike(){
+
+    hikeStarted=true;
+
+    autoFollow=true;
+
+    try{
+
+        wakeLock=
+            await navigator
+            .wakeLock
+            .request('screen');
+
+        log('WakeLock ON');
+
+    }catch(e){
+
+        log('WakeLock FAIL');
+
+    }
+
+    document
+      .getElementById('startBtn')
+      .classList.add('hidden');
+
+    document
+      .getElementById('stageName')
+      .innerText=
+      'Pohod aktiven';
+}
+
+function centerOnUser(){
+
+    if(!userPos){
+        return;
+    }
+
+    autoFollow=true;
+
+    map.setView(
+        [
+            userPos.lat,
+            userPos.lon
+        ],
+        18
+    );
+}
+
+function checkWaypoint(){
+
+    const q=questions[0];
+    const wp=wps[1];
+
+    if(!wp)return;
+
+    const d=
+        hav(
+            userPos.lat,
+            userPos.lon,
+            wp.lat,
+            wp.lon
+        );
+
+    if(d<=q.radius){
+
+        insideCounter++;
+
+        if(
+           insideCounter>=3
+        ){
+           openQuestion(q);
+        }
+
+    }else{
+
+        insideCounter=0;
+
+    }
+}
+
+function openQuestion(q){
+
+    const m=
+      document.getElementById(
+          'questionModal'
+      );
+
+    if(
+      !m.classList.contains(
+         'hidden'
+      )
+    ) return;
+
+    m.classList.remove(
+        'hidden'
+    );
+
+    document
+      .getElementById(
+          'questionTitle'
+      )
+      .innerText=
+      q.question;
+
+    document
+      .getElementById(
+         'questionContainer'
+      )
+      .innerHTML=
+      q.options.map(
+          o=>
+          '<button class="answer-btn">'+
+          o+
+          '</button>'
+      ).join('');
+}
+
+init();
