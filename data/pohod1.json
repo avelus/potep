@@ -1,1 +1,23 @@
-[{"waypoint":"START","radius":30,"question":"Test vprašanje?","options":["A","B","C"],"correct":0}]
+[
+  {
+    "waypoint": "START",
+    "radius": 30,
+    "title": "Dobrodošli",
+    "message": "Ali želiš začeti pohod?",
+    "button": "ZAČNI POHOD"
+  },
+  {
+    "waypoint": "T1",
+    "radius": 30,
+    "question": "Test vprašanje?",
+    "options": ["A", "B", "C"],
+    "correct": 0
+  },
+  {
+    "waypoint": "END",
+    "radius": 30,
+    "title": "Čestitamo",
+    "message": "Uspešno ste zaključili pohod.",
+    "button": "KONEC POHODA"
+  }
+]
