@@ -12,6 +12,9 @@ let started = false;
 let finished = false;
 let activeStage = 1;
 
+let startDialogShown = false;
+let endDialogShown = false;
+
 const triggeredWaypoints = new Set();
 const trackLayers = {};
 const waypointLayers = {};
@@ -29,8 +32,11 @@ map.setView([46.1, 13.6], 15);
 
 function logMsg(msg) {
     const el = document.getElementById("gpsLog");
+
     el.innerHTML =
-        "[" + new Date().toLocaleTimeString() + "] " +
+        "[" +
+        new Date().toLocaleTimeString() +
+        "] " +
         msg +
         "<br>" +
         el.innerHTML;
@@ -49,22 +55,29 @@ function hav(lat1, lon1, lat2, lon2) {
         Math.cos(lat2 * p) *
         Math.sin(dLon / 2) ** 2;
 
-    return R * 2 * Math.atan2(
-        Math.sqrt(a),
-        Math.sqrt(1 - a)
+    return (
+        R *
+        2 *
+        Math.atan2(
+            Math.sqrt(a),
+            Math.sqrt(1 - a)
+        )
     );
 }
 
 async function loadQuestions() {
     questions =
         await (
-            await fetch("data/pohod1.json")
+            await fetch(
+                "data/pohod1.json"
+            )
         ).json();
 }
 
 function getConfig(name) {
     return questions.find(
-        x => x.waypoint === name
+        x =>
+            x.waypoint === name
     );
 }
 
@@ -72,7 +85,9 @@ async function loadGpx() {
 
     const gpxText =
         await (
-            await fetch("routes/route.gpx")
+            await fetch(
+                "routes/route.gpx"
+            )
         ).text();
 
     const xml =
@@ -87,9 +102,14 @@ async function loadGpx() {
             "trk"
         );
 
-    for (let i = 0; i < trks.length; i++) {
+    for (
+        let i = 0;
+        i < trks.length;
+        i++
+    ) {
 
-        const trk = trks[i];
+        const trk =
+            trks[i];
 
         const nameNode =
             trk.getElementsByTagNameNS(
@@ -105,20 +125,29 @@ async function loadGpx() {
                 "trkpt"
             );
 
-        for (let j = 0; j < trkpts.length; j++) {
+        for (
+            let j = 0;
+            j < trkpts.length;
+            j++
+        ) {
 
             points.push([
                 parseFloat(
-                    trkpts[j].getAttribute("lat")
+                    trkpts[j].getAttribute(
+                        "lat"
+                    )
                 ),
                 parseFloat(
-                    trkpts[j].getAttribute("lon")
+                    trkpts[j].getAttribute(
+                        "lon"
+                    )
                 )
             ]);
         }
 
         tracks.push({
-            name: nameNode.textContent.trim(),
+            name:
+                nameNode.textContent.trim(),
             points: points
         });
     }
@@ -129,9 +158,14 @@ async function loadGpx() {
             "wpt"
         );
 
-    for (let i = 0; i < wptNodes.length; i++) {
+    for (
+        let i = 0;
+        i < wptNodes.length;
+        i++
+    ) {
 
-        const node = wptNodes[i];
+        const node =
+            wptNodes[i];
 
         const name =
             node.getElementsByTagNameNS(
@@ -187,15 +221,20 @@ function drawObjects() {
     });
 
     if (
-        waypointLayers["START"]
+        waypointLayers[
+            "START"
+        ]
     ) {
 
-        waypointLayers["START"]
-            .addTo(map);
+        waypointLayers[
+            "START"
+        ].addTo(map);
 
         const startWp =
             wps.find(
-                x => x.name === "START"
+                x =>
+                    x.name ===
+                    "START"
             );
 
         if (startWp) {
@@ -225,10 +264,10 @@ function updateProgress() {
         total === 0
             ? 0
             : Math.round(
-                done /
-                total *
-                100
-            );
+                  (done /
+                      total) *
+                      100
+              );
 
     document.getElementById(
         "progress"
@@ -255,7 +294,8 @@ function showModal(
 
     document.getElementById(
         "questionTitle"
-    ).innerText = title;
+    ).innerText =
+        title;
 
     const container =
         document.getElementById(
@@ -263,7 +303,9 @@ function showModal(
         );
 
     container.innerHTML =
-        "<p>" + text + "</p>";
+        "<p>" +
+        text +
+        "</p>";
 
     const btn =
         document.createElement(
@@ -314,7 +356,10 @@ function showQuestion(q) {
     container.innerHTML = "";
 
     q.options.forEach(
-        (option, index) => {
+        (
+            option,
+            index
+        ) => {
 
             const btn =
                 document.createElement(
@@ -367,16 +412,18 @@ function startHike() {
         trackLayers["POT1"]
     ) {
 
-        trackLayers["POT1"]
-            .addTo(map);
+        trackLayers[
+            "POT1"
+        ].addTo(map);
     }
 
     if (
         waypointLayers["T1"]
     ) {
 
-        waypointLayers["T1"]
-            .addTo(map);
+        waypointLayers[
+            "T1"
+        ].addTo(map);
     }
 
     document.getElementById(
@@ -398,28 +445,37 @@ function openNextStage() {
         activeStage;
 
     if (
-        trackLayers[nextTrack]
+        trackLayers[
+            nextTrack
+        ]
     ) {
 
-        trackLayers[nextTrack]
-            .addTo(map);
+        trackLayers[
+            nextTrack
+        ].addTo(map);
     }
 
     if (
-        waypointLayers[nextWaypoint]
+        waypointLayers[
+            nextWaypoint
+        ]
     ) {
 
-        waypointLayers[nextWaypoint]
-            .addTo(map);
+        waypointLayers[
+            nextWaypoint
+        ].addTo(map);
     }
 
     if (
-        !waypointLayers[nextWaypoint] &&
+        !waypointLayers[
+            nextWaypoint
+        ] &&
         waypointLayers["END"]
     ) {
 
-        waypointLayers["END"]
-            .addTo(map);
+        waypointLayers[
+            "END"
+        ].addTo(map);
     }
 
     updateProgress();
@@ -434,7 +490,9 @@ function handleWaypointCheck() {
         return;
     }
 
-    for (const wp of wps) {
+    for (
+        const wp of wps
+    ) {
 
         const cfg =
             getConfig(
@@ -460,9 +518,12 @@ function handleWaypointCheck() {
 
             if (
                 !started &&
+                !startDialogShown &&
                 distance <=
                     cfg.radius
             ) {
+
+                startDialogShown = true;
 
                 showModal(
                     cfg.title,
@@ -476,16 +537,19 @@ function handleWaypointCheck() {
         }
 
         if (
-            wp.name ===
-            "END"
+            wp.name === "END"
         ) {
 
             if (
                 started &&
                 !finished &&
+                !endDialogShown &&
                 distance <=
                     cfg.radius
             ) {
+
+                endDialogShown =
+                    true;
 
                 finished = true;
 
@@ -537,9 +601,11 @@ function startGPS() {
 
             userPos = {
                 lat:
-                    pos.coords.latitude,
+                    pos.coords
+                        .latitude,
                 lon:
-                    pos.coords.longitude
+                    pos.coords
+                        .longitude
             };
 
             document.getElementById(
@@ -560,11 +626,17 @@ function startGPS() {
                 "gpsCoords"
             ).innerText =
                 "Koordinate: " +
-                userPos.lat.toFixed(6) +
+                userPos.lat.toFixed(
+                    6
+                ) +
                 ", " +
-                userPos.lon.toFixed(6);
+                userPos.lon.toFixed(
+                    6
+                );
 
-            if (!userMarker) {
+            if (
+                !userMarker
+            ) {
 
                 userMarker =
                     L.marker([
