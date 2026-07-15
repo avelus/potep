@@ -1,1 +1,72 @@
-<!DOCTYPE html><html lang="sl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>POTEP v7.1</title><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"><link rel="stylesheet" href="style.css"></head><body><div id="map"></div><div id="topBar"><h2>POTEP</h2><div id="stageName">Nalaganje...</div><div id="progress">0%</div><div class="bar"><div id="progressBar"></div></div></div><div id="bottomCard"><div id="gpsStatus">📡 Čakam GPS fix ...</div><div id="gpsAccuracy">Natančnost: -</div><div id="gpsCoords">Koordinate: -</div><div id="gpsConfirm"></div><div id="gpsLog" style="font-size:12px;margin-top:8px;max-height:80px;overflow:auto"></div></div><div id="questionModal" class="modal hidden"><div class="card"><h3 id="questionTitle"></h3><div id="questionContainer"></div></div></div><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="app.js"></script></body></html>
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+
+    <title>POTEP v7.1</title>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div id="map"></div>
+
+    <div id="topBar">
+        <h2>POTEP</h2>
+
+        <div id="stageName">
+            Nalaganje...
+        </div>
+
+        <div id="progress">
+            0%
+        </div>
+
+        <div class="bar">
+            <div id="progressBar"></div>
+        </div>
+    </div>
+
+    <div id="bottomCard">
+
+        <div id="gpsStatus">
+            📡 Čakam GPS fix ...
+        </div>
+
+        <div id="gpsAccuracy">
+            Natančnost: -
+        </div>
+
+        <div id="gpsCoords">
+            Koordinate: -
+        </div>
+
+        <div id="gpsConfirm"></div>
+
+        <div
+            id="gpsLog"
+            style="font-size:12px;margin-top:8px;max-height:80px;overflow:auto">
+        </div>
+
+    </div>
+
+    <div id="questionModal" class="modal hidden">
+
+        <div class="card">
+
+            <h3 id="questionTitle"></h3>
+
+            <div id="questionContainer"></div>
+
+        </div>
+
+    </div>
+
+    unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="app.js"></script>
+
+</body>
+</html>
