@@ -1,4 +1,3 @@
-
 const route = "route";
 
 let gpsAccuracy = 999;
@@ -45,6 +44,7 @@ function logMsg(msg) {
 function hav(lat1, lon1, lat2, lon2) {
 
     const R = 6371000;
+
     const p = Math.PI / 180;
 
     const dLat = (lat2 - lat1) * p;
@@ -151,15 +151,12 @@ async function init() {
             ).text();
 
         const xml =
-            new DOMParser()
-            .parseFromString(
+            new DOMParser().parseFromString(
                 gpxText,
                 "text/xml"
             );
 
-        xml.querySelectorAll(
-            "trkpt"
-        ).forEach(p => {
+        xml.querySelectorAll("trkpt").forEach(p => {
 
             track.push({
 
@@ -174,9 +171,7 @@ async function init() {
 
         });
 
-        xml.querySelectorAll(
-            "wpt"
-        ).forEach(w => {
+        xml.querySelectorAll("wpt").forEach(w => {
 
             const nameNode =
                 w.querySelector("name");
@@ -184,7 +179,7 @@ async function init() {
             wps.push({
 
                 name: nameNode
-                    ? nameNode.textContent
+                    ? nameNode.textContent.trim()
                     : "",
 
                 lat: Number(
@@ -243,26 +238,21 @@ function draw() {
         return;
     }
 
-    const seg =
-        segments[0];
+    const seg = segments[0];
 
     if (!seg.pts.length) {
         return;
     }
 
-    line =
-        L.polyline(
-            seg.pts.map(
-                p => [
-                    p.lat,
-                    p.lon
-                ]
-            ),
-            {
-                color: "#2F5D50",
-                weight: 5
-            }
-        ).addTo(map);
+    line = L.polyline(
+        seg.pts.map(
+            p => [p.lat, p.lon]
+        ),
+        {
+            color: "#2F5D50",
+            weight: 5
+        }
+    ).addTo(map);
 
     map.fitBounds(
         line.getBounds()
@@ -282,9 +272,7 @@ function draw() {
 
 function startGPS() {
 
-    if (
-        !navigator.geolocation
-    ) {
+    if (!navigator.geolocation) {
 
         const s =
             document.getElementById(
@@ -316,18 +304,15 @@ function startGPS() {
 
 function gpsSuccess(pos) {
 
-    gpsAccuracy =
-        Math.round(
-            pos.coords.accuracy
-        );
+    gpsAccuracy = Math.round(
+        pos.coords.accuracy
+    );
 
     userPos = {
 
-        lat:
-            pos.coords.latitude,
+        lat: pos.coords.latitude,
 
-        lon:
-            pos.coords.longitude
+        lon: pos.coords.longitude
     };
 
     const accuracy =
@@ -363,13 +348,9 @@ function gpsSuccess(pos) {
 
     if (status) {
 
-        if (
-            gpsAccuracy <= 15
-        ) {
+        if (gpsAccuracy <= 15) {
 
-            status.className =
-                "good";
-
+            status.className = "good";
             status.innerText =
                 "✅ GPS pripravljen";
 
@@ -377,17 +358,13 @@ function gpsSuccess(pos) {
             gpsAccuracy <= 30
         ) {
 
-            status.className =
-                "warn";
-
+            status.className = "warn";
             status.innerText =
                 "⚠ GPS se izboljšuje";
 
         } else {
 
-            status.className =
-                "bad";
-
+            status.className = "bad";
             status.innerText =
                 "📡 Slab signal";
         }
@@ -420,7 +397,6 @@ function gpsSuccess(pos) {
     if (
         gpsAccuracy <= 30
     ) {
-
         checkWaypoint();
     }
 }
@@ -462,9 +438,7 @@ function checkWaypoint() {
 
     const startWp =
         wps.find(
-            w =>
-                w.name ===
-                "START"
+            w => w.name === "START"
         );
 
     if (
@@ -474,7 +448,7 @@ function checkWaypoint() {
         !startDialogShown
     ) {
 
-        const startDistance =
+        const d =
             hav(
                 userPos.lat,
                 userPos.lon,
@@ -483,12 +457,10 @@ function checkWaypoint() {
             );
 
         if (
-            startDistance <=
-            startCfg.radius
+            d <= startCfg.radius
         ) {
 
-            startDialogShown =
-                true;
+            startDialogShown = true;
 
             showModal(
                 startCfg.title,
@@ -498,12 +470,15 @@ function checkWaypoint() {
 
                     started = true;
 
-                    document
-                        .getElementById(
+                    const stage =
+                        document.getElementById(
                             "stageName"
-                        )
-                        .innerText =
-                        "Pohod aktiven";
+                        );
+
+                    if (stage) {
+                        stage.innerText =
+                            "Pohod aktiven";
+                    }
                 }
             );
         }
@@ -526,8 +501,8 @@ function checkWaypoint() {
 
         const wp =
             wps.find(
-                x =>
-                    x.name ===
+                w =>
+                    w.name ===
                     firstQuestion.waypoint
             );
 
@@ -591,9 +566,7 @@ function checkWaypoint() {
 
     const endWp =
         wps.find(
-            w =>
-                w.name ===
-                "END"
+            w => w.name === "END"
         );
 
     if (
@@ -603,7 +576,7 @@ function checkWaypoint() {
         !endDialogShown
     ) {
 
-        const endDistance =
+        const d =
             hav(
                 userPos.lat,
                 userPos.lon,
@@ -612,14 +585,11 @@ function checkWaypoint() {
             );
 
         if (
-            endDistance <=
-            endCfg.radius
+            d <= endCfg.radius
         ) {
 
-            endDialogShown =
-                true;
-
             finished = true;
+            endDialogShown = true;
 
             showModal(
                 endCfg.title,
@@ -663,11 +633,11 @@ function openQuestion(q) {
         "questionContainer"
     ).innerHTML =
         q.options
-        .map(
-            option =>
-                `<button class="answer-btn">${option}</button>`
-        )
-        .join("");
+            .map(
+                option =>
+                    `<button class="answer-btn">${option}</button>`
+            )
+            .join("");
 }
 
 window.addEventListener(
