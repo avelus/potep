@@ -409,7 +409,6 @@ if (!userMarker) {
                 padding: [50, 50]
             }
         );
-    }
 
 } else {
 
