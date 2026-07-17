@@ -377,49 +377,35 @@ function gpsSuccess(pos) {
         }
     }
 
-if (!userMarker) {
+    if (!userMarker) {
 
-    userMarker =
-        L.circleMarker(
-            [
-                userPos.lat,
-                userPos.lon
-            ],
-            {
-                radius: 8,
-                color: "blue",
-                fillColor: "blue",
-                fillOpacity: 0.9
-            }
-        ).addTo(map);
+        userMarker =
+            L.circleMarker(
+                [
+                    userPos.lat,
+                    userPos.lon
+                ],
+                {
+                    radius: 8,
+                    color: "blue",
+                    fillColor: "blue",
+                    fillOpacity: 0.9
+                }
+            ).addTo(map);
 
-    const startWp =
-        wps.find(
-            w => w.name === "START"
-        );
+    } else {
 
-    if (startWp) {
-
-        const bounds =
-            L.latLngBounds([
-                [userPos.lat, userPos.lon],
-                [startWp.lat, startWp.lon]
-            ]);
-
-        map.fitBounds(
-            bounds,
-            {
-                padding: [50, 50]
-            }
-        );
+        userMarker.setLatLng([
+            userPos.lat,
+            userPos.lon
+        ]);
     }
 
-} else {
-
-    userMarker.setLatLng([
-        userPos.lat,
-        userPos.lon
-    ]);
+    if (
+        gpsAccuracy <= 30
+    ) {
+        checkWaypoint();
+    }
 }
 
 function gpsError(err) {
