@@ -1,1 +1,63 @@
-[{"waypoint":"T1","radius":30,"question":"Test vprašanje?","options":["A","B","C"],"correct":0}]
+[
+  {
+    "waypoint": "START",
+    "radius": 30,
+    "icon": "start",
+
+    "title": "Dobrodošli",
+    "message": "Ali želite začeti pohod?",
+    "button": "ZAČNI POHOD"
+  },
+
+  {
+    "waypoint": "T1",
+    "radius": 30,
+    "icon": "kapelica",
+
+    "question": "Test vprašanje?",
+    "options": [
+      "A",
+      "B",
+      "C"
+    ],
+    "correct": 0
+  },
+
+  {
+    "waypoint": "T2",
+    "radius": 30,
+    "icon": "slap",
+
+    "question": "Drugo vprašanje?",
+    "options": [
+      "A",
+      "B",
+      "C"
+    ],
+    "correct": 1
+  },
+
+  {
+    "waypoint": "T3",
+    "radius": 30,
+    "icon": "most",
+
+    "question": "Tretje vprašanje?",
+    "options": [
+      "A",
+      "B",
+      "C"
+    ],
+    "correct": 2
+  },
+
+  {
+    "waypoint": "END",
+    "radius": 30,
+    "icon": "end",
+
+    "title": "Čestitamo",
+    "message": "Uspešno ste zaključili pohod.",
+    "button": "KONEC POHODA"
+  }
+]
