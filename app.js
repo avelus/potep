@@ -23,7 +23,7 @@ const map = L.map("map");
 L.tileLayer(
     "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
     {
-        attribution: "&copy; OpenStreetMap contributors"
+        attribution: "© OpenStreetMap contributors"
     }
 ).addTo(map);
 
@@ -44,7 +44,6 @@ function logMsg(msg) {
 function hav(lat1, lon1, lat2, lon2) {
 
     const R = 6371000;
-
     const p = Math.PI / 180;
 
     const dLat = (lat2 - lat1) * p;
@@ -71,8 +70,8 @@ function getConfig(name) {
 
 function showModal(
     title,
-    text,
-    buttonText,
+    message,
+    button,
     callback
 ) {
 
@@ -96,23 +95,21 @@ function showModal(
 
     container.innerHTML = "";
 
-    const p =
+    const text =
         document.createElement("p");
 
-    p.innerText = text;
+    text.innerText = message;
 
-    container.appendChild(p);
+    container.appendChild(text);
 
     const btn =
-        document.createElement(
-            "button"
-        );
+        document.createElement("button");
 
     btn.className =
         "answer-btn";
 
     btn.innerText =
-        buttonText;
+        button;
 
     btn.onclick = () => {
 
@@ -120,7 +117,9 @@ function showModal(
             "hidden"
         );
 
-        callback();
+        if (callback) {
+            callback();
+        }
     };
 
     container.appendChild(btn);
@@ -156,14 +155,14 @@ async function init() {
                 "text/xml"
             );
 
-        xml.querySelectorAll("trkpt").forEach(p => {
+        xml.querySelectorAll(
+            "trkpt"
+        ).forEach(p => {
 
             track.push({
-
                 lat: Number(
                     p.getAttribute("lat")
                 ),
-
                 lon: Number(
                     p.getAttribute("lon")
                 )
@@ -171,7 +170,9 @@ async function init() {
 
         });
 
-        xml.querySelectorAll("wpt").forEach(w => {
+        xml.querySelectorAll(
+            "wpt"
+        ).forEach(w => {
 
             const nameNode =
                 w.querySelector("name");
@@ -264,8 +265,8 @@ function draw() {
             w.lat,
             w.lon
         ])
-        .addTo(map)
-        .bindPopup(w.name);
+            .addTo(map)
+            .bindPopup(w.name);
 
     });
 }
@@ -350,7 +351,9 @@ function gpsSuccess(pos) {
 
         if (gpsAccuracy <= 15) {
 
-            status.className = "good";
+            status.className =
+                "good";
+
             status.innerText =
                 "✅ GPS pripravljen";
 
@@ -358,13 +361,17 @@ function gpsSuccess(pos) {
             gpsAccuracy <= 30
         ) {
 
-            status.className = "warn";
+            status.className =
+                "warn";
+
             status.innerText =
                 "⚠ GPS se izboljšuje";
 
         } else {
 
-            status.className = "bad";
+            status.className =
+                "bad";
+
             status.innerText =
                 "📡 Slab signal";
         }
@@ -426,9 +433,9 @@ function gpsError(err) {
 function checkWaypoint() {
 
     if (
-        !questions.length ||
+        !userPos ||
         !wps.length ||
-        !userPos
+        !questions.length
     ) {
         return;
     }
@@ -470,15 +477,10 @@ function checkWaypoint() {
 
                     started = true;
 
-                    const stage =
-                        document.getElementById(
-                            "stageName"
-                        );
-
-                    if (stage) {
-                        stage.innerText =
-                            "Pohod aktiven";
-                    }
+                    document.getElementById(
+                        "stageName"
+                    ).innerText =
+                        "Pohod aktiven";
                 }
             );
         }
@@ -566,7 +568,8 @@ function checkWaypoint() {
 
     const endWp =
         wps.find(
-            w => w.name === "END"
+            w =>
+                w.name === "END"
         );
 
     if (
