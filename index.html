@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="sl">
 
@@ -7,12 +8,9 @@
 
     <title>POTEP v7.1</title>
 
-    <!-- Leaflet -->
+    <!-- Leaflet CSS -->
     <link rel="stylesheet"
-          href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-
-    <!-- Lastni CSS -->
-    <link rel="stylesheet" href="style.css">
+          href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
     <style>
         html,
@@ -20,12 +18,15 @@
             margin: 0;
             padding: 0;
             height: 100%;
-            font-family: Arial, Helvetica, sans-serif;
+            font-family: Arial, sans-serif;
         }
 
         #map {
             position: fixed;
-            inset: 0;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             z-index: 1;
         }
 
@@ -36,11 +37,11 @@
             right: 10px;
             z-index: 1000;
 
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 12px;
+            background: rgba(255,255,255,0.95);
             padding: 12px;
+            border-radius: 10px;
 
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
         }
 
         #topBar h2 {
@@ -48,19 +49,16 @@
         }
 
         .bar {
-            width: 100%;
             height: 10px;
             background: #ddd;
             border-radius: 5px;
             overflow: hidden;
-            margin-top: 8px;
         }
 
         #progressBar {
             width: 0%;
             height: 100%;
             background: #2F5D50;
-            transition: width 0.3s ease;
         }
 
         #bottomCard {
@@ -68,15 +66,20 @@
             left: 10px;
             right: 10px;
             bottom: 10px;
-
             z-index: 1000;
 
-            background: rgba(255, 255, 255, 0.95);
-
-            border-radius: 12px;
+            background: rgba(255,255,255,0.95);
             padding: 12px;
+            border-radius: 10px;
 
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        #gpsLog {
+            margin-top: 8px;
+            font-size: 12px;
+            max-height: 80px;
+            overflow-y: auto;
         }
 
         .good {
@@ -94,26 +97,17 @@
             font-weight: bold;
         }
 
-        #gpsLog {
-            margin-top: 10px;
-            font-size: 12px;
-            max-height: 100px;
-            overflow-y: auto;
-            border-top: 1px solid #ddd;
-            padding-top: 6px;
-        }
-
         .modal {
             position: fixed;
             inset: 0;
 
-            z-index: 2000;
+            background: rgba(0,0,0,0.6);
 
             display: flex;
             justify-content: center;
             align-items: center;
 
-            background: rgba(0, 0, 0, 0.6);
+            z-index: 2000;
         }
 
         .hidden {
@@ -121,21 +115,16 @@
         }
 
         .card {
+            background: white;
             width: 90%;
             max-width: 500px;
 
-            background: white;
-
-            border-radius: 16px;
             padding: 20px;
-
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
         }
 
         .answer-btn {
-            display: block;
             width: 100%;
-
             margin-top: 10px;
             padding: 12px;
 
@@ -146,27 +135,23 @@
             color: white;
 
             cursor: pointer;
-            font-size: 15px;
         }
 
         .answer-btn:hover {
-            background: #24473d;
+            background: #23463c;
         }
     </style>
 </head>
 
 <body>
 
-    <!-- Zemljevid -->
     <div id="map"></div>
 
-    <!-- Zgornja vrstica -->
     <div id="topBar">
-
         <h2>POTEP</h2>
 
         <div id="stageName">
-            Nalaganje...
+            Nalaganje ...
         </div>
 
         <div id="progress">
@@ -176,10 +161,8 @@
         <div class="bar">
             <div id="progressBar"></div>
         </div>
-
     </div>
 
-    <!-- GPS kartica -->
     <div id="bottomCard">
 
         <div id="gpsStatus">
@@ -200,7 +183,6 @@
 
     </div>
 
-    <!-- Modal za vprašanje -->
     <div id="questionModal" class="modal hidden">
 
         <div class="card">
@@ -213,12 +195,16 @@
 
     </div>
 
-    <!-- Leaflet -->
-    ://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <!-- Test -->
+    <script>
+        console.log("Leaflet loaded:", typeof L);
+    </script>
 
     <!-- Tvoja aplikacija -->
     <script src="app.js"></script>
 
 </body>
-
 </html>
