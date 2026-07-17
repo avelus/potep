@@ -1,4 +1,5 @@
-const route = "pohod1";
+
+const route = "route";
 
 let gpsAccuracy = 999;
 let insideCounter = 0;
@@ -11,6 +12,12 @@ let questions = [];
 let userPos = null;
 let userMarker = null;
 let line = null;
+
+let started = false;
+let finished = false;
+
+let startDialogShown = false;
+let endDialogShown = false;
 
 const map = L.map("map");
 
@@ -38,7 +45,6 @@ function logMsg(msg) {
 function hav(lat1, lon1, lat2, lon2) {
 
     const R = 6371000;
-
     const p = Math.PI / 180;
 
     const dLat = (lat2 - lat1) * p;
@@ -56,6 +62,74 @@ function hav(lat1, lon1, lat2, lon2) {
     );
 }
 
+function getConfig(name) {
+
+    return questions.find(
+        q => q.waypoint === name
+    );
+}
+
+function showModal(
+    title,
+    text,
+    buttonText,
+    callback
+) {
+
+    const modal =
+        document.getElementById(
+            "questionModal"
+        );
+
+    if (!modal) {
+        return;
+    }
+
+    document.getElementById(
+        "questionTitle"
+    ).innerText = title;
+
+    const container =
+        document.getElementById(
+            "questionContainer"
+        );
+
+    container.innerHTML = "";
+
+    const p =
+        document.createElement("p");
+
+    p.innerText = text;
+
+    container.appendChild(p);
+
+    const btn =
+        document.createElement(
+            "button"
+        );
+
+    btn.className =
+        "answer-btn";
+
+    btn.innerText =
+        buttonText;
+
+    btn.onclick = () => {
+
+        modal.classList.add(
+            "hidden"
+        );
+
+        callback();
+    };
+
+    container.appendChild(btn);
+
+    modal.classList.remove(
+        "hidden"
+    );
+}
+
 async function init() {
 
     try {
@@ -64,21 +138,28 @@ async function init() {
 
         questions =
             await (
-                await fetch(`data/${route}.json`)
+                await fetch(
+                    `data/${route}.json`
+                )
             ).json();
 
         const gpxText =
             await (
-                await fetch(`routes/${route}.gpx`)
+                await fetch(
+                    `routes/${route}.gpx`
+                )
             ).text();
 
         const xml =
-            new DOMParser().parseFromString(
+            new DOMParser()
+            .parseFromString(
                 gpxText,
                 "text/xml"
             );
 
-        xml.querySelectorAll("trkpt").forEach(p => {
+        xml.querySelectorAll(
+            "trkpt"
+        ).forEach(p => {
 
             track.push({
 
@@ -93,7 +174,9 @@ async function init() {
 
         });
 
-        xml.querySelectorAll("wpt").forEach(w => {
+        xml.querySelectorAll(
+            "wpt"
+        ).forEach(w => {
 
             const nameNode =
                 w.querySelector("name");
@@ -124,7 +207,9 @@ async function init() {
         );
 
         build();
+
         draw();
+
         startGPS();
 
     }
@@ -133,7 +218,8 @@ async function init() {
         console.error(err);
 
         logMsg(
-            "NAPAKA: " + err.message
+            "NAPAKA: " +
+            err.message
         );
     }
 }
@@ -157,21 +243,26 @@ function draw() {
         return;
     }
 
-    const seg = segments[0];
+    const seg =
+        segments[0];
 
     if (!seg.pts.length) {
         return;
     }
 
-    line = L.polyline(
-        seg.pts.map(
-            p => [p.lat, p.lon]
-        ),
-        {
-            color: "#2F5D50",
-            weight: 5
-        }
-    ).addTo(map);
+    line =
+        L.polyline(
+            seg.pts.map(
+                p => [
+                    p.lat,
+                    p.lon
+                ]
+            ),
+            {
+                color: "#2F5D50",
+                weight: 5
+            }
+        ).addTo(map);
 
     map.fitBounds(
         line.getBounds()
@@ -191,7 +282,9 @@ function draw() {
 
 function startGPS() {
 
-    if (!navigator.geolocation) {
+    if (
+        !navigator.geolocation
+    ) {
 
         const s =
             document.getElementById(
@@ -223,15 +316,18 @@ function startGPS() {
 
 function gpsSuccess(pos) {
 
-    gpsAccuracy = Math.round(
-        pos.coords.accuracy
-    );
+    gpsAccuracy =
+        Math.round(
+            pos.coords.accuracy
+        );
 
     userPos = {
 
-        lat: pos.coords.latitude,
+        lat:
+            pos.coords.latitude,
 
-        lon: pos.coords.longitude
+        lon:
+            pos.coords.longitude
     };
 
     const accuracy =
@@ -267,9 +363,13 @@ function gpsSuccess(pos) {
 
     if (status) {
 
-        if (gpsAccuracy <= 15) {
+        if (
+            gpsAccuracy <= 15
+        ) {
 
-            status.className = "good";
+            status.className =
+                "good";
+
             status.innerText =
                 "✅ GPS pripravljen";
 
@@ -277,13 +377,17 @@ function gpsSuccess(pos) {
             gpsAccuracy <= 30
         ) {
 
-            status.className = "warn";
+            status.className =
+                "warn";
+
             status.innerText =
                 "⚠ GPS se izboljšuje";
 
         } else {
 
-            status.className = "bad";
+            status.className =
+                "bad";
+
             status.innerText =
                 "📡 Slab signal";
         }
@@ -316,6 +420,7 @@ function gpsSuccess(pos) {
     if (
         gpsAccuracy <= 30
     ) {
+
         checkWaypoint();
     }
 }
@@ -346,61 +451,182 @@ function checkWaypoint() {
 
     if (
         !questions.length ||
-        wps.length < 2 ||
+        !wps.length ||
         !userPos
     ) {
         return;
     }
 
-    const q = questions[0];
-    const wp = wps[1];
+    const startCfg =
+        getConfig("START");
 
-    const d = hav(
-        userPos.lat,
-        userPos.lon,
-        wp.lat,
-        wp.lon
-    );
+    const startWp =
+        wps.find(
+            w =>
+                w.name ===
+                "START"
+        );
 
-    logMsg(
-        `Razdalja do točke: ${Math.round(d)} m`
-    );
+    if (
+        startCfg &&
+        startWp &&
+        !started &&
+        !startDialogShown
+    ) {
 
-    if (d <= q.radius) {
-
-        insideCounter++;
-
-        const confirm =
-            document.getElementById(
-                "gpsConfirm"
+        const startDistance =
+            hav(
+                userPos.lat,
+                userPos.lon,
+                startWp.lat,
+                startWp.lon
             );
-
-        if (confirm) {
-
-            confirm.innerText =
-                `GPS potrditev: ${insideCounter}/3`;
-        }
 
         if (
-            insideCounter >= 3
+            startDistance <=
+            startCfg.radius
         ) {
 
-            openQuestion(q);
+            startDialogShown =
+                true;
 
-            insideCounter = 0;
+            showModal(
+                startCfg.title,
+                startCfg.message,
+                startCfg.button,
+                () => {
+
+                    started = true;
+
+                    document
+                        .getElementById(
+                            "stageName"
+                        )
+                        .innerText =
+                        "Pohod aktiven";
+                }
+            );
         }
 
-    } else {
+        return;
+    }
 
-        insideCounter = 0;
+    if (!started) {
+        return;
+    }
 
-        const confirm =
-            document.getElementById(
-                "gpsConfirm"
+    const firstQuestion =
+        questions.find(
+            q => q.question
+        );
+
+    if (
+        firstQuestion
+    ) {
+
+        const wp =
+            wps.find(
+                x =>
+                    x.name ===
+                    firstQuestion.waypoint
             );
 
-        if (confirm) {
-            confirm.innerText = "";
+        if (wp) {
+
+            const d =
+                hav(
+                    userPos.lat,
+                    userPos.lon,
+                    wp.lat,
+                    wp.lon
+                );
+
+            if (
+                d <=
+                firstQuestion.radius
+            ) {
+
+                insideCounter++;
+
+                const confirm =
+                    document.getElementById(
+                        "gpsConfirm"
+                    );
+
+                if (confirm) {
+
+                    confirm.innerText =
+                        `GPS potrditev: ${insideCounter}/3`;
+                }
+
+                if (
+                    insideCounter >= 3
+                ) {
+
+                    openQuestion(
+                        firstQuestion
+                    );
+
+                    insideCounter = 0;
+                }
+
+            } else {
+
+                insideCounter = 0;
+
+                const confirm =
+                    document.getElementById(
+                        "gpsConfirm"
+                    );
+
+                if (confirm) {
+                    confirm.innerText = "";
+                }
+            }
+        }
+    }
+
+    const endCfg =
+        getConfig("END");
+
+    const endWp =
+        wps.find(
+            w =>
+                w.name ===
+                "END"
+        );
+
+    if (
+        endCfg &&
+        endWp &&
+        !finished &&
+        !endDialogShown
+    ) {
+
+        const endDistance =
+            hav(
+                userPos.lat,
+                userPos.lon,
+                endWp.lat,
+                endWp.lon
+            );
+
+        if (
+            endDistance <=
+            endCfg.radius
+        ) {
+
+            endDialogShown =
+                true;
+
+            finished = true;
+
+            showModal(
+                endCfg.title,
+                endCfg.message,
+                endCfg.button,
+                () => {}
+            );
         }
     }
 }
@@ -430,17 +656,18 @@ function openQuestion(q) {
 
     document.getElementById(
         "questionTitle"
-    ).innerText = q.question;
+    ).innerText =
+        q.question;
 
     document.getElementById(
         "questionContainer"
     ).innerHTML =
         q.options
-            .map(
-                option =>
-                    `<button class="answer-btn">${option}</button>`
-            )
-            .join("");
+        .map(
+            option =>
+                `<button class="answer-btn">${option}</button>`
+        )
+        .join("");
 }
 
 window.addEventListener(
