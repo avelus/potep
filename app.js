@@ -377,28 +377,47 @@ function gpsSuccess(pos) {
         }
     }
 
-    if (!userMarker) {
+if (!userMarker) {
 
-        userMarker =
-            L.circleMarker(
-                [
-                    userPos.lat,
-                    userPos.lon
-                ],
-                {
-                    radius: 8,
-                    color: "blue",
-                    fillColor: "blue",
-                    fillOpacity: 0.9
-                }
-            ).addTo(map);
+    userMarker =
+        L.circleMarker(
+            [
+                userPos.lat,
+                userPos.lon
+            ],
+            {
+                radius: 8,
+                color: "blue",
+                fillColor: "blue",
+                fillOpacity: 0.9
+            }
+        ).addTo(map);
 
-    } else {
+    const startWp =
+        wps.find(
+            w => w.name === "START"
+        );
 
-        userMarker.setLatLng([
-            userPos.lat,
-            userPos.lon
-        ]);
+    if (startWp) {
+
+        map.fitBounds(
+            [
+                [userPos.lat, userPos.lon],
+                [startWp.lat, startWp.lon]
+            ],
+            {
+                padding: [50, 50]
+            }
+        );
+    }
+
+} else {
+
+    userMarker.setLatLng([
+        userPos.lat,
+        userPos.lon
+    ]);
+}
     }
 
     if (
