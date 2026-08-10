@@ -1,1 +1,169 @@
-html,body,#map{height:100%;margin:0;font-family:Arial}#topBar,#bottomCard{position:absolute;left:10px;right:10px;background:#F4F1E6;padding:12px;border-radius:18px;z-index:1000}#topBar{top:10px}#bottomCard{bottom:10px}.bar{height:10px;background:#ddd}.bar div{height:10px;background:#2F5D50;width:0}.good{color:green}.warn{color:orange}.bad{color:red}.modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center}.hidden{display:none}.card{background:white;padding:20px}.answer-btn{display:block;width:100%;margin:8px 0;padding:12px}
+html,
+body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    font-family: Arial, sans-serif;
+}
+
+#map {
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+}
+
+#topBar,
+#bottomCard {
+    position: fixed;
+    left: 10px;
+    right: 10px;
+    z-index: 1000;
+
+    background: rgba(255, 255, 255, 0.95);
+
+    border-radius: 16px;
+
+    padding: 12px;
+
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+#topBar {
+    top: 10px;
+}
+
+#bottomCard {
+    bottom: 10px;
+}
+
+#topBar h2 {
+    margin: 0 0 8px 0;
+}
+
+.bar {
+    width: 100%;
+    height: 10px;
+
+    background: #ddd;
+
+    border-radius: 999px;
+
+    overflow: hidden;
+
+    margin-top: 8px;
+}
+
+#progressBar {
+    width: 0%;
+    height: 100%;
+    background: #2F5D50;
+}
+
+#gpsLog {
+    margin-top: 8px;
+    font-size: 12px;
+    max-height: 80px;
+    overflow-y: auto;
+}
+
+.good {
+    color: green;
+    font-weight: bold;
+}
+
+.warn {
+    color: orange;
+    font-weight: bold;
+}
+
+.bad {
+    color: red;
+    font-weight: bold;
+}
+
+.modal {
+    position: fixed;
+    inset: 0;
+
+    background: rgba(0, 0, 0, 0.6);
+
+    display: flex;
+
+    justify-content: center;
+    align-items: center;
+
+    z-index: 3000;
+}
+
+.hidden {
+    display: none;
+}
+
+.card {
+    width: 90%;
+    max-width: 500px;
+
+    background: white;
+
+    padding: 20px;
+
+    border-radius: 14px;
+
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
+.answer-btn {
+    display: block;
+
+    width: 100%;
+
+    padding: 12px;
+
+    margin-top: 10px;
+
+    border: none;
+
+    border-radius: 10px;
+
+    background: #2F5D50;
+
+    color: white;
+
+    cursor: pointer;
+
+    font-size: 15px;
+}
+
+.answer-btn:hover {
+    background: #23463c;
+}
+
+#centerBtn {
+    position: fixed;
+
+    right: 20px;
+
+    bottom: 120px;
+
+    width: 56px;
+    height: 56px;
+
+    border: none;
+
+    border-radius: 50%;
+
+    background: white;
+
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+
+    z-index: 2000;
+
+    font-size: 24px;
+
+    cursor: pointer;
+}
+
+#centerBtn:active {
+    transform: scale(0.95);
+}
