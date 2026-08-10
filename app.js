@@ -1,4 +1,4 @@
-const route = "route";
+let route = null;
 
 let gpsAccuracy = 999;
 let insideCounter = 0;
@@ -8,8 +8,12 @@ let wps = [];
 let segments = [];
 let questions = [];
 
+let hikes = [];
+let activeHike = null;
+
 let userPos = null;
 let userMarker = null;
+
 let line = null;
 
 let started = false;
@@ -17,6 +21,14 @@ let finished = false;
 
 let startDialogShown = false;
 let endDialogShown = false;
+
+let hikeLoaded = false;
+let currentQuestionIndex = 0;
+let questionOpened = false;
+
+let autoCenter = true;
+
+const HIKE_RADIUS = 5000;
 
 const map = L.map("map");
 
@@ -27,12 +39,25 @@ L.tileLayer(
     }
 ).addTo(map);
 
+const userIcon = L.icon({
+    iconUrl: "images/user.png",
+    iconSize: [36, 36],
+    iconAnchor: [18, 18]
+});
+
+const startMarkers = [];
+
 function logMsg(msg) {
 
-    const log = document.getElementById("gpsLog");
+    const log =
+        document.getElementById(
+            "gpsLog"
+        );
 
     if (!log) {
+
         console.log(msg);
+
         return;
     }
 
@@ -41,13 +66,23 @@ function logMsg(msg) {
         log.innerHTML;
 }
 
-function hav(lat1, lon1, lat2, lon2) {
+function hav(
+    lat1,
+    lon1,
+    lat2,
+    lon2
+) {
 
     const R = 6371000;
-    const p = Math.PI / 180;
 
-    const dLat = (lat2 - lat1) * p;
-    const dLon = (lon2 - lon1) * p;
+    const p =
+        Math.PI / 180;
+
+    const dLat =
+        (lat2 - lat1) * p;
+
+    const dLon =
+        (lon2 - lon1) * p;
 
     const a =
         Math.sin(dLat / 2) ** 2 +
@@ -55,9 +90,13 @@ function hav(lat1, lon1, lat2, lon2) {
         Math.cos(lat2 * p) *
         Math.sin(dLon / 2) ** 2;
 
-    return R * 2 * Math.atan2(
-        Math.sqrt(a),
-        Math.sqrt(1 - a)
+    return (
+        R *
+        2 *
+        Math.atan2(
+            Math.sqrt(a),
+            Math.sqrt(1 - a)
+        )
     );
 }
 
@@ -65,6 +104,13 @@ function getConfig(name) {
 
     return questions.find(
         q => q.waypoint === name
+    );
+}
+
+function getWaypoint(name) {
+
+    return wps.find(
+        w => w.name === name
     );
 }
 
@@ -96,14 +142,21 @@ function showModal(
     container.innerHTML = "";
 
     const text =
-        document.createElement("p");
+        document.createElement(
+            "p"
+        );
 
-    text.innerText = message;
+    text.innerText =
+        message;
 
-    container.appendChild(text);
+    container.appendChild(
+        text
+    );
 
     const btn =
-        document.createElement("button");
+        document.createElement(
+            "button"
+        );
 
     btn.className =
         "answer-btn";
@@ -122,109 +175,141 @@ function showModal(
         }
     };
 
-    container.appendChild(btn);
+    container.appendChild(
+        btn
+    );
 
     modal.classList.remove(
         "hidden"
     );
 }
 
-async function init() {
+async function loadHikes() {
 
-    try {
+    hikes =
+        await (
+            await fetch(
+                "data/hikes.json"
+            )
+        ).json();
 
-        logMsg("Inicializacija...");
+    logMsg(
+        `Pohodi: ${hikes.length}`
+    );
+}
 
-        questions =
-            await (
-                await fetch(
-                    `data/${route}.json`
-                )
-            ).json();
+async function loadHike(id) {
 
-        const gpxText =
-            await (
-                await fetch(
-                    `routes/${route}.gpx`
-                )
-            ).text();
+    if (hikeLoaded) {
+        return;
+    }
 
-        const xml =
-            new DOMParser().parseFromString(
+    hikeLoaded = true;
+
+    route = id;
+
+    logMsg(
+        `Nalagam pohod ${id}`
+    );
+
+    questions =
+        await (
+            await fetch(
+                `data/${id}.json`
+            )
+        ).json();
+
+    const gpxText =
+        await (
+            await fetch(
+                `routes/${id}.gpx`
+            )
+        ).text();
+
+    const xml =
+        new DOMParser()
+            .parseFromString(
                 gpxText,
                 "text/xml"
             );
 
-        xml.querySelectorAll(
-            "trkpt"
-        ).forEach(p => {
+    track = [];
+    wps = [];
 
-            track.push({
-                lat: Number(
-                    p.getAttribute("lat")
-                ),
-                lon: Number(
-                    p.getAttribute("lon")
+    xml.querySelectorAll(
+        "trkpt"
+    )
+    .forEach(p => {
+
+        track.push({
+
+            lat: Number(
+                p.getAttribute(
+                    "lat"
                 )
-            });
+            ),
+
+            lon: Number(
+                p.getAttribute(
+                    "lon"
+                )
+            )
 
         });
 
-        xml.querySelectorAll(
-            "wpt"
-        ).forEach(w => {
+    });
 
-            const nameNode =
-                w.querySelector("name");
+    xml.querySelectorAll(
+        "wpt"
+    )
+    .forEach(w => {
 
-            wps.push({
+        const nameNode =
+            w.querySelector(
+                "name"
+            );
 
-                name: nameNode
-                    ? nameNode.textContent.trim()
-                    : "",
+        wps.push({
 
-                lat: Number(
-                    w.getAttribute("lat")
-                ),
+            name: nameNode
+                ? nameNode.textContent.trim()
+                : "",
 
-                lon: Number(
-                    w.getAttribute("lon")
+            lat: Number(
+                w.getAttribute(
+                    "lat"
                 )
-            });
+            ),
+
+            lon: Number(
+                w.getAttribute(
+                    "lon"
+                )
+            )
 
         });
 
-        logMsg(
-            `Track: ${track.length} točk`
-        );
+    });
 
-        logMsg(
-            `Waypoints: ${wps.length}`
-        );
+    build();
+    draw();
 
-        build();
+    logMsg(
+        `Track: ${track.length}`
+    );
 
-        draw();
-
-        startGPS();
-
-    }
-    catch (err) {
-
-        console.error(err);
-
-        logMsg(
-            "NAPAKA: " +
-            err.message
-        );
-    }
+    logMsg(
+        `Waypointi: ${wps.length}`
+    );
 }
 
 function build() {
 
     segments = [];
 
-    if (track.length === 0) {
+    if (
+        track.length === 0
+    ) {
         return;
     }
 
@@ -235,45 +320,95 @@ function build() {
 
 function draw() {
 
-    if (!segments.length) {
+    if (
+        !segments.length
+    ) {
         return;
     }
 
-    const seg = segments[0];
-
-    if (!seg.pts.length) {
-        return;
+    if (line) {
+        map.removeLayer(line);
     }
 
-    line = L.polyline(
-        seg.pts.map(
-            p => [p.lat, p.lon]
-        ),
-        {
-            color: "#2F5D50",
-            weight: 5
-        }
-    ).addTo(map);
+    const seg =
+        segments[0];
 
-    map.fitBounds(
-        line.getBounds()
-    );
+    line =
+        L.polyline(
+            seg.pts.map(
+                p => [
+                    p.lat,
+                    p.lon
+                ]
+            ),
+            {
+                color: "#2F5D50",
+                weight: 5
+            }
+        ).addTo(map);
 
     wps.forEach(w => {
 
-        L.marker([
-            w.lat,
-            w.lon
-        ])
-            .addTo(map)
-            .bindPopup(w.name);
+        L.marker(
+            [
+                w.lat,
+                w.lon
+            ]
+        )
+        .addTo(map)
+        .bindPopup(
+            w.name
+        );
+
+    });
+}
+
+function showNearbyStarts() {
+
+    hikes.forEach(h => {
+
+        if (!userPos) {
+            return;
+        }
+
+        const d =
+            hav(
+                userPos.lat,
+                userPos.lon,
+                h.startLat,
+                h.startLon
+            );
+
+        if (
+            d <=
+            HIKE_RADIUS
+        ) {
+
+            if (
+                !h._marker
+            ) {
+
+                h._marker =
+                    L.marker([
+                        h.startLat,
+                        h.startLon
+                    ])
+                    .addTo(map)
+                    .bindPopup(
+                        h.name
+                    );
+            }
+
+        }
 
     });
 }
 
 function startGPS() {
 
-    if (!navigator.geolocation) {
+    if (
+        !navigator.geolocation
+    ) {
 
         const s =
             document.getElementById(
@@ -281,6 +416,7 @@ function startGPS() {
             );
 
         if (s) {
+
             s.innerText =
                 "GPS ni podprt";
         }
@@ -292,9 +428,9 @@ function startGPS() {
         gpsSuccess,
         gpsError,
         {
-            enableHighAccuracy: true,
-            timeout: 15000,
-            maximumAge: 1000
+            enableHighAccuracy:true,
+            timeout:15000,
+            maximumAge:1000
         }
     );
 
@@ -305,15 +441,18 @@ function startGPS() {
 
 function gpsSuccess(pos) {
 
-    gpsAccuracy = Math.round(
-        pos.coords.accuracy
-    );
+    gpsAccuracy =
+        Math.round(
+            pos.coords.accuracy
+        );
 
     userPos = {
 
-        lat: pos.coords.latitude,
+        lat:
+            pos.coords.latitude,
 
-        lon: pos.coords.longitude
+        lon:
+            pos.coords.longitude
     };
 
     const accuracy =
@@ -349,15 +488,17 @@ function gpsSuccess(pos) {
 
     if (status) {
 
-        if (gpsAccuracy <= 15) {
+        if (
+            gpsAccuracy <= 15
+        ) {
 
             status.className =
                 "good";
 
             status.innerText =
                 "✅ GPS pripravljen";
-
-        } else if (
+        }
+        else if (
             gpsAccuracy <= 30
         ) {
 
@@ -366,8 +507,8 @@ function gpsSuccess(pos) {
 
             status.innerText =
                 "⚠ GPS se izboljšuje";
-
-        } else {
+        }
+        else {
 
             status.className =
                 "bad";
@@ -380,20 +521,25 @@ function gpsSuccess(pos) {
     if (!userMarker) {
 
         userMarker =
-            L.circleMarker(
+            L.marker(
                 [
                     userPos.lat,
                     userPos.lon
                 ],
                 {
-                    radius: 8,
-                    color: "blue",
-                    fillColor: "blue",
-                    fillOpacity: 0.9
+                    icon:userIcon
                 }
             ).addTo(map);
 
-    } else {
+        map.setView(
+            [
+                userPos.lat,
+                userPos.lon
+            ],
+            17
+        );
+    }
+    else {
 
         userMarker.setLatLng([
             userPos.lat,
@@ -401,9 +547,49 @@ function gpsSuccess(pos) {
         ]);
     }
 
+    if (autoCenter) {
+
+        map.setView(
+            [
+                userPos.lat,
+                userPos.lon
+            ],
+            17
+        );
+    }
+
+    if (!activeHike) {
+
+        showNearbyStarts();
+
+        hikes.forEach(h => {
+
+            const d =
+                hav(
+                    userPos.lat,
+                    userPos.lon,
+                    h.startLat,
+                    h.startLon
+                );
+
+            if (
+                d <= 50
+            ) {
+
+                activeHike = h;
+
+                loadHike(
+                    h.id
+                );
+            }
+
+        });
+    }
+
     if (
         gpsAccuracy <= 30
     ) {
+
         checkWaypoint();
     }
 }
@@ -441,11 +627,13 @@ function checkWaypoint() {
     }
 
     const startCfg =
-        getConfig("START");
+        getConfig(
+            "START"
+        );
 
     const startWp =
-        wps.find(
-            w => w.name === "START"
+        getWaypoint(
+            "START"
         );
 
     if (
@@ -464,10 +652,12 @@ function checkWaypoint() {
             );
 
         if (
-            d <= startCfg.radius
+            d <=
+            startCfg.radius
         ) {
 
-            startDialogShown = true;
+            startDialogShown =
+                true;
 
             showModal(
                 startCfg.title,
@@ -475,11 +665,14 @@ function checkWaypoint() {
                 startCfg.button,
                 () => {
 
-                    started = true;
+                    started =
+                        true;
 
-                    document.getElementById(
-                        "stageName"
-                    ).innerText =
+                    document
+                        .getElementById(
+                            "stageName"
+                        )
+                        .innerText =
                         "Pohod aktiven";
                 }
             );
@@ -492,20 +685,23 @@ function checkWaypoint() {
         return;
     }
 
-    const firstQuestion =
-        questions.find(
+    const questionList =
+        questions.filter(
             q => q.question
         );
 
+    const currentQuestion =
+        questionList[
+            currentQuestionIndex
+        ];
+
     if (
-        firstQuestion
+        currentQuestion
     ) {
 
         const wp =
-            wps.find(
-                w =>
-                    w.name ===
-                    firstQuestion.waypoint
+            getWaypoint(
+                currentQuestion.waypoint
             );
 
         if (wp) {
@@ -520,7 +716,7 @@ function checkWaypoint() {
 
             if (
                 d <=
-                firstQuestion.radius
+                currentQuestion.radius
             ) {
 
                 insideCounter++;
@@ -541,13 +737,13 @@ function checkWaypoint() {
                 ) {
 
                     openQuestion(
-                        firstQuestion
+                        currentQuestion
                     );
 
                     insideCounter = 0;
                 }
-
-            } else {
+            }
+            else {
 
                 insideCounter = 0;
 
@@ -557,19 +753,22 @@ function checkWaypoint() {
                     );
 
                 if (confirm) {
-                    confirm.innerText = "";
+
+                    confirm.innerText =
+                        "";
                 }
             }
         }
     }
 
     const endCfg =
-        getConfig("END");
+        getConfig(
+            "CILJ"
+        );
 
     const endWp =
-        wps.find(
-            w =>
-                w.name === "END"
+        getWaypoint(
+            "CILJ"
         );
 
     if (
@@ -588,11 +787,14 @@ function checkWaypoint() {
             );
 
         if (
-            d <= endCfg.radius
+            d <=
+            endCfg.radius
         ) {
 
             finished = true;
-            endDialogShown = true;
+
+            endDialogShown =
+                true;
 
             showModal(
                 endCfg.title,
@@ -611,36 +813,149 @@ function openQuestion(q) {
             "questionModal"
         );
 
-    if (!modal) {
-        return;
-    }
-
     if (
-        !modal.classList.contains(
-            "hidden"
-        )
+        !modal ||
+        questionOpened
     ) {
         return;
     }
+
+    questionOpened =
+        true;
 
     modal.classList.remove(
         "hidden"
     );
 
-    document.getElementById(
-        "questionTitle"
-    ).innerText =
+    document
+        .getElementById(
+            "questionTitle"
+        )
+        .innerText =
         q.question;
 
-    document.getElementById(
-        "questionContainer"
-    ).innerHTML =
-        q.options
-            .map(
-                option =>
-                    `<button class="answer-btn">${option}</button>`
-            )
-            .join("");
+    const container =
+        document.getElementById(
+            "questionContainer"
+        );
+
+    container.innerHTML =
+        "";
+
+    q.options.forEach(
+        (
+            option,
+            index
+        ) => {
+
+            const btn =
+                document.createElement(
+                    "button"
+                );
+
+            btn.className =
+                "answer-btn";
+
+            btn.innerText =
+                option;
+
+            btn.onclick =
+                () => {
+
+                if (
+                    index ===
+                    q.correct
+                ) {
+
+                    currentQuestionIndex++;
+
+                    modal.classList.add(
+                        "hidden"
+                    );
+
+                    questionOpened =
+                        false;
+
+                    alert(
+                        "Pravilno!"
+                    );
+                }
+                else {
+
+                    alert(
+                        "Napačen odgovor."
+                    );
+                }
+            };
+
+            container.appendChild(
+                btn
+            );
+        }
+    );
+}
+
+async function init() {
+
+    try {
+
+        logMsg(
+            "Inicializacija..."
+        );
+
+        await loadHikes();
+
+        map.on(
+            "dragstart",
+            () => {
+
+                autoCenter =
+                    false;
+            }
+        );
+
+        const centerBtn =
+            document.getElementById(
+                "centerBtn"
+            );
+
+        if (centerBtn) {
+
+            centerBtn.onclick =
+                () => {
+
+                autoCenter =
+                    true;
+
+                if (
+                    userPos
+                ) {
+
+                    map.setView(
+                        [
+                            userPos.lat,
+                            userPos.lon
+                        ],
+                        17
+                    );
+                }
+            };
+        }
+
+        startGPS();
+
+    }
+    catch(err) {
+
+        console.error(
+            err
+        );
+
+        logMsg(
+            "NAPAKA: " +
+            err.message
+        );
+    }
 }
 
 window.addEventListener(
