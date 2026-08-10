@@ -3,142 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>POTEP v7.1</title>
+    <title>POTEP V1</title>
 
     <!-- Leaflet CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-
-    <style>
-        html, body {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            font-family: Arial, sans-serif;
-        }
-
-        #map {
-            position: fixed;
-            inset: 0;
-            z-index: 1;
-        }
-
-        #topBar {
-            position: fixed;
-            top: 10px;
-            left: 10px;
-            right: 10px;
-
-            z-index: 1000;
-
-            background: rgba(255,255,255,0.95);
-            border-radius: 10px;
-            padding: 12px;
-
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-        }
-
-        #topBar h2 {
-            margin: 0 0 8px 0;
-        }
-
-        .bar {
-            width: 100%;
-            height: 10px;
-            background: #ddd;
-            border-radius: 5px;
-            overflow: hidden;
-            margin-top: 8px;
-        }
-
-        #progressBar {
-            width: 0%;
-            height: 100%;
-            background: #2F5D50;
-        }
-
-        #bottomCard {
-            position: fixed;
-            left: 10px;
-            right: 10px;
-            bottom: 10px;
-
-            z-index: 1000;
-
-            background: rgba(255,255,255,0.95);
-            border-radius: 10px;
-            padding: 12px;
-
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-        }
-
-        #gpsLog {
-            margin-top: 8px;
-            font-size: 12px;
-            max-height: 80px;
-            overflow-y: auto;
-        }
-
-        .good {
-            color: green;
-            font-weight: bold;
-        }
-
-        .warn {
-            color: orange;
-            font-weight: bold;
-        }
-
-        .bad {
-            color: red;
-            font-weight: bold;
-        }
-
-        .modal {
-            position: fixed;
-            inset: 0;
-
-            background: rgba(0,0,0,0.6);
-
-            display: flex;
-            justify-content: center;
-            align-items: center;
-
-            z-index: 2000;
-        }
-
-        .hidden {
-            display: none;
-        }
-
-        .card {
-            background: white;
-            width: 90%;
-            max-width: 500px;
-
-            padding: 20px;
-            border-radius: 12px;
-        }
-
-        .answer-btn {
-            width: 100%;
-            padding: 12px;
-            margin-top: 10px;
-
-            border: none;
-            border-radius: 8px;
-
-            background: #2F5D50;
-            color: white;
-
-            cursor: pointer;
-        }
-
-        .answer-btn:hover {
-            background: #23463c;
-        }
-    </style>
+    .com/leaflet@1.9.4/dist/leaflet.css">
 </head>
 
 <body>
@@ -146,15 +14,21 @@
     <div id="map"></div>
 
     <div id="topBar">
+
         <h2>POTEP</h2>
 
-        <div id="stageName">Nalaganje ...</div>
+        <div id="stageName">
+            Nalaganje ...
+        </div>
 
-        <div id="progress">0%</div>
+        <div id="progress">
+            0%
+        </div>
 
         <div class="bar">
             <div id="progressBar"></div>
         </div>
+
     </div>
 
     <div id="bottomCard">
@@ -177,7 +51,12 @@
 
     </div>
 
+    <button id="centerBtn">
+        📍
+    </button>
+
     <div id="questionModal" class="modal hidden">
+
         <div class="card">
 
             <h3 id="questionTitle"></h3>
@@ -185,16 +64,16 @@
             <div id="questionContainer"></div>
 
         </div>
+
     </div>
 
     <!-- Leaflet JavaScript -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    /leaflet@1.9.4/dist/leaflet.js"></script>
 
     <script>
         console.log("Leaflet:", typeof L);
     </script>
 
-    <!-- Tvoja aplikacija -->
     <script src="app.js"></script>
 
 </body>
